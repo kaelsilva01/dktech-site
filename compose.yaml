@@ -1,0 +1,17 @@
+
+services:
+  meu-site:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dktech-site:v1
+    container_name: app-compose
+    ports:
+      - "8081:80"
+    networks:
+      - minharede
+    restart: unless-stopped
+
+networks:
+  minharede:
+    external: true
