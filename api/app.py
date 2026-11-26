@@ -1,9 +1,23 @@
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 
 class MinhaAPI(BaseHTTPRequestHandler):
 
+    def responder_json(self, status, dados):
+        self.send_response(status)
+        self.send_header(
+            "Content-Type",
+            "application/json; charset=utf-8"
+        )
+        self.end_headers()
+
+        self.wfile.write(
+            json.dumps(dados, ensure_ascii=False).encode("utf-8")
+        )
+
     def do_GET(self):
+
         if self.path == "/":
             resposta = {
                 "projeto": "DK TECH",
@@ -11,17 +25,21 @@ class MinhaAPI(BaseHTTPRequestHandler):
                 "mensagem": "API funcionando com sucesso!"
             }
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
+            self.responder_json(200, resposta)
 
-            self.wfile.write(
-                json.dumps(resposta, ensure_ascii=False).encode("utf-8")
-            )
+        elif self.path == "/health":
+            resposta = {
+                "status": "healthy",
+                "servico": "DK TECH API"
+            }
+
+            self.responder_json(200, resposta)
 
         else:
-            self.send_response(404)
-            self.end_headers()
+            self.responder_json(404, {
+                "erro": "Rota nao encontrada"
+            })
+
 
 servidor = HTTPServer(("0.0.0.0", 5000), MinhaAPI)
 
