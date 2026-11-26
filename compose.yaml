@@ -1,4 +1,3 @@
-
 services:
   meu-site:
     build:
@@ -8,6 +7,18 @@ services:
     container_name: app-compose
     ports:
       - "8081:80"
+    networks:
+      - minharede
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    image: dktech-api:v1
+    container_name: dktech-api
+    ports:
+      - "5000:5000"
     networks:
       - minharede
     restart: unless-stopped
