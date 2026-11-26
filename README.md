@@ -2,21 +2,20 @@
 
 Projeto autoral desenvolvido para demonstrar conhecimentos práticos em conteinerização, configuração de servidores web, desenvolvimento de API e gerenciamento de aplicações utilizando Docker e Docker Compose.
 
-O projeto possui dois serviços independentes:
-
-- **Site:** aplicação web estática servida pelo Nginx.
-- **API:** serviço desenvolvido em Python, responsável por retornar informações em formato JSON.
+O projeto reúne um site institucional, uma API desenvolvida em Python e um servidor Nginx configurado como Reverse Proxy.
 
 ## Tecnologias utilizadas
 
-- HTML5 e CSS3
-- Python 3.12
-- Nginx Alpine
+- HTML5
+- CSS3
+- JavaScript
+- Python 3
+- Nginx
 - Docker
 - Docker Compose
 - Docker Networking
+- Healthchecks
 - Git e GitHub
-- Docker Hub
 
 ## Arquitetura do projeto
 
@@ -29,13 +28,12 @@ projetoDK/
 │
 ├── website/
 │   ├── index.html
-│   └── style.css
+│   ├── style.css
+│   └── script.js
 │
 ├── Dockerfile
-├── compose.yaml
-├── .dockerignore
-├── .gitignore
-└── README.md
+├── nginx.conf
+└── compose.yaml
 ```
 
 ## Serviços da aplicação
@@ -43,9 +41,39 @@ projetoDK/
 | Serviço | Tecnologia | Porta |
 |---|---|---|
 | Site | Nginx Alpine | 8081 |
-| API | Python 3.12 | 5000 |
+| API | Python | 5000 |
 
-Os serviços são executados em containers separados e conectados por uma rede Docker externa chamada `minharede`.
+### Site — Nginx
+
+O Nginx é responsável por disponibilizar o site e encaminhar as requisições destinadas à API.
+
+### API — Python
+
+A API foi desenvolvida utilizando o módulo `http.server` da biblioteca padrão do Python.
+
+Endpoints disponíveis:
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/` | Retorna informações da API |
+| GET | `/health` | Verifica a saúde da API |
+| GET | `/api/` | Acessa a API pelo Nginx |
+| GET | `/api/health` | Verifica a API pelo Nginx |
+
+### Reverse Proxy
+
+O Nginx encaminha as requisições recebidas em `/api/` para o serviço Python, utilizando a rede interna do Docker.
+
+Isso permite que o navegador acesse a API por meio do mesmo endereço do site.
+
+### Healthchecks
+
+Foram configurados Healthchecks nos dois serviços:
+
+- Nginx: verifica se a página inicial está respondendo.
+- API Python: verifica se o endpoint `/health` está disponível.
+
+Os containers utilizam `restart: unless-stopped`.
 
 ## Como executar o projeto
 
@@ -53,45 +81,39 @@ Os serviços são executados em containers separados e conectados por uma rede D
 
 ```bash
 git clone https://github.com/kaelsilva01/dktech-site.git
-```
-
-### 2. Acessar a pasta
-
-```bash
 cd dktech-site
 ```
 
-### 3. Criar a rede Docker
+### 2. Criar a rede Docker
 
 ```bash
 docker network create minharede
 ```
 
-Caso a rede já exista, não é necessário criá-la novamente.
+A rede é externa e compartilhada pelos serviços da aplicação.
 
-### 4. Construir e iniciar os serviços
+### 3. Construir e iniciar os containers
 
 ```bash
 docker compose up -d --build
 ```
 
-### 5. Verificar os containers
+### 4. Verificar os containers
 
 ```bash
 docker compose ps
 ```
 
+Os serviços devem aparecer com status `healthy` após os Healthchecks serem executados com sucesso.
+
 ## Acessar a aplicação
 
-**Site web:**
+- Site: http://localhost:8081
+- API direta: http://localhost:5000
+- API pelo Nginx: http://localhost:8081/api/
+- Healthcheck da API: http://localhost:8081/api/health
 
-http://localhost:8081
-
-**API:**
-
-http://localhost:5000
-
-A API retorna uma resposta JSON semelhante a esta:
+## Exemplo de resposta da API
 
 ```json
 {
@@ -101,76 +123,41 @@ A API retorna uma resposta JSON semelhante a esta:
 }
 ```
 
-## Construção da imagem Docker do site
+## Comandos úteis
 
-A imagem do site utiliza Nginx Alpine como imagem-base.
-
-```bash
-docker build -t dktech-site:v1 .
-```
-
-## Imagem publicada no Docker Hub
-
-A imagem do site está disponível publicamente no Docker Hub.
-
-**Baixar a imagem:**
-
-```bash
-docker pull silvass/dktech-site:v1
-```
-
-**Executar a imagem:**
-
-```bash
-docker run -d --name dktech-publicado -p 8082:80 silvass/dktech-site:v1
-```
-
-A aplicação poderá ser acessada em:
-
-http://localhost:8082
-
-## Gerenciamento e diagnóstico
-
-**Verificar os containers:**
+Verificar os containers:
 
 ```bash
 docker compose ps
 ```
 
-**Consultar os logs:**
+Visualizar os logs:
 
 ```bash
 docker compose logs -f
 ```
 
-**Parar os serviços:**
+Visualizar os logs da API:
+
+```bash
+docker compose logs -f api
+```
+
+Verificar a saúde dos containers:
+
+```bash
+docker inspect app-compose --format '{{.State.Health.Status}}'
+docker inspect dktech-api --format '{{.State.Health.Status}}'
+```
+
+Parar os serviços:
 
 ```bash
 docker compose down
 ```
 
-## Objetivo e conhecimentos demonstrados
+## Docker Hub
 
-Este projeto demonstra a aplicação prática de conhecimentos em:
+Imagem do site disponível no Docker Hub:
 
-- Criação e configuração de Dockerfiles.
-- Construção de imagens Docker personalizadas.
-- Execução de múltiplos containers.
-- Orquestração de serviços com Docker Compose.
-- Configuração de redes Docker.
-- Hospedagem de aplicação web com Nginx.
-- Desenvolvimento e execução de API Python.
-- Publicação de imagem Docker no Docker Hub.
-- Versionamento de código com Git e GitHub.
-
-## Links do projeto
-
-**GitHub:**  
-https://github.com/kaelsilva01/dktech-site
-
-**Docker Hub:**  
-https://hub.docker.com/r/silvass/dktech-site
-
----
-
-*Projeto autoral desenvolvido para fins de demonstração de conhecimentos práticos em tecnologia e infraestrutura de aplicações.*
+https://hub.docker
